@@ -1,0 +1,97 @@
+{
+    "balance": 9550.02605625,
+    "positions": {
+        "NVDA": {
+            "quantity": 2.8229612528862633,
+            "entry_price": 215.93499755859375,
+            "stop_loss": 0.05,
+            "take_profit": 0.12,
+            "side": "LONG"
+        }
+    },
+    "realized_pnl": 159.6021875,
+    "equity_curve": [
+        10000,
+        10159.6021875,
+        10159.6021875,
+        10159.6021875,
+        10160.350270509018,
+        10160.491427186655,
+        10161.112482108289,
+        10161.676505769257,
+        10161.112482108289,
+        10161.056010822238,
+        10159.30604707926,
+        10158.995261168624,
+        10158.882318596525,
+        10158.767997625377,
+        10158.81176179519,
+        10158.642391012012,
+        10159.120307807374,
+        10159.1971104794,
+        10159.037603864417,
+        10159.079946560212,
+        10159.644530195796
+    ],
+    "trade_history": [
+        {
+            "status": "EXECUTED",
+            "asset": "AAPL",
+            "action": "BUY",
+            "side": "LONG",
+            "quantity": 10.0,
+            "price": 100.0
+        },
+        {
+            "status": "EXECUTED",
+            "asset": "AAPL",
+            "action": "SELL",
+            "side": "LONG_EXIT",
+            "quantity": 10.0,
+            "price": 111.0,
+            "pnl": 110.0
+        },
+        {
+            "status": "EXECUTED",
+            "asset": "GOOGL",
+            "action": "SELL",
+            "side": "SHORT",
+            "quantity": 5.055,
+            "price": 200.0
+        },
+        {
+            "status": "EXECUTED",
+            "asset": "GOOGL",
+            "action": "BUY",
+            "side": "SHORT_COVER",
+            "quantity": 5.055,
+            "price": 175.0,
+            "pnl": 126.375
+        },
+        {
+            "status": "EXECUTED",
+            "asset": "TSLA",
+            "action": "SELL",
+            "side": "SHORT",
+            "quantity": 5.1181875,
+            "price": 200.0
+        },
+        {
+            "status": "EXECUTED",
+            "asset": "TSLA",
+            "action": "BUY",
+            "side": "SHORT_COVER",
+            "quantity": 5.1181875,
+            "price": 215.0,
+            "pnl": -76.7728125
+        },
+        {
+            "status": "EXECUTED",
+            "asset": "NVDA",
+            "action": "BUY",
+            "side": "LONG",
+            "quantity": 2.8229612528862633,
+            "price": 215.93499755859375
+        }
+    ]
+}
