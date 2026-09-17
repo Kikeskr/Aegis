@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Aegis — AI Trading Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/styles.css"
+    >
+
+    <style>
+
+        /* =====================================================
+           AEGIS AUTONOMOUS ENGINE TELEMETRY
+        ====================================================== */
+
+        .agent-panel {
+            margin-bottom: 24px;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .agent-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 12px;
+            border: 1px solid #293241;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .08em;
+        }
+
+        .agent-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #8d98a8;
+        }
+
+        .agent-dot.online {
+            background: #37c98b;
+            box-shadow:
+                0 0 10px
+                rgba(55, 201, 139, .65);
+        }
+
+        .agent-dot.offline {
+            background: #ef6b73;
+        }
+
+        .agent-state {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+        }
+
+        .agent-flow {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .agent-flow-step {
+            padding: 14px;
+            border: 1px solid #252d38;
+            border-radius: 10px;
+            background: rgba(255,255,255,.015);
+        }
+
+        .agent-flow-step span {
+            display: block;
+            font-size: 11px;
+            opacity: .65;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+        }
+
+        .agent-flow-step strong {
+            font-size: 14px;
+        }
+
+        .agent-stats {
+            display: grid;
+            grid-template-columns:
+                repeat(7, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .agent-stat {
+            padding: 14px;
+            border: 1px solid #252d38;
+            border-radius: 10px;
+        }
+
+        .agent-stat span {
+            display: block;
+            font-size: 11px;
+            opacity: .65;
+            margin-bottom: 6px;
+        }
+
+        .agent-stat strong {
+            font-size: 20px;
+        }
+
+        .agent-last-event {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border: 1px solid #252d38;
+            border-radius: 10px;
+        }
+
+        .agent-last-event-label {
+            font-size: 11px;
+            opacity: .65;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom: 7px;
+        }
+
+        .agent-last-event-title {
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .agent-last-event-time {
+            margin-top: 6px;
+            font-size: 11px;
+            opacity: .55;
+        }
+
+        .agent-error {
+            margin-top: 10px;
+            font-size: 11px;
+            opacity: .75;
+        }
+
+        .status-pill.agent-offline {
+            opacity: .65;
+        }
+
+                /* =====================================================
+        TOP AEGIS STATUS
+        ====================================================== */
+
+        .topbar .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            width: max-content;
+            min-width: 118px;
+            height: 36px;
+            padding: 0 12px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .topbar .status-pill > span:first-child {
+            width: 7px;
+            height: 7px;
+            min-width: 7px;
+            border-radius: 50%;
+        }
+
+        .topbar .status-label {
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        @media (max-width: 1000px) {
+
+            .agent-stats {
+                grid-template-columns:
+                    repeat(4, minmax(0, 1fr));
+            }
+
+        }
+
+        @media (max-width: 700px) {
+
+            .agent-flow {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .agent-stats {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .agent-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         LOGIN
+    ====================================================== -->
+
+    <div
+        id="loginView"
+        class="auth-shell"
+    >
+
+        <div class="auth-card">
+
+            <div class="brand-mark">
+                A
+            </div>
+
+            <div class="eyebrow">
+                AUTONOMOUS EVENT-DRIVEN TRADING
+            </div>
+
+            <h1>Aegis</h1>
+
+            <p class="auth-subtitle">
+                AI-powered paper trading with event
+                intelligence, risk control, and
+                transparent execution.
+            </p>
+
+            <form id="loginForm">
+
+                <label for="email">
+                    Email
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="kenneth@example.com"
+                    required
+                >
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    placeholder="Your password"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="primary-btn"
+                >
+                    Sign in
+                </button>
+
+                <div
+                    id="loginError"
+                    class="form-error"
+                ></div>
+
+                <button
+                    type="button"
+                    id="showRegisterBtn"
+                    class="auth-switch-btn"
+                >
+                    Create a new account
+                </button>
+
+            </form>
+
+            <form
+                id="registerForm"
+                class="hidden"
+            >
+
+                <label for="registerUsername">
+                    Username
+                </label>
+
+                <input
+                    id="registerUsername"
+                    type="text"
+                    placeholder="Your username"
+                    minlength="2"
+                    required
+                >
+
+                <label for="registerEmail">
+                    Email
+                </label>
+
+                <input
+                    id="registerEmail"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                >
+
+                <label for="registerPassword">
+                    Password
+                </label>
+
+                <input
+                    id="registerPassword"
+                    type="password"
+                    placeholder="Create a password"
+                    minlength="6"
+                    required
+                >
+
+                <label for="registerConfirmPassword">
+                    Confirm password
+                </label>
+
+                <input
+                    id="registerConfirmPassword"
+                    type="password"
+                    placeholder="Repeat your password"
+                    minlength="6"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="primary-btn"
+                >
+                    Create account
+                </button>
+
+                <div
+                    id="registerError"
+                    class="form-error"
+                ></div>
+
+                <button
+                    type="button"
+                    id="showLoginBtn"
+                    class="auth-switch-btn"
+                >
+                    Back to sign in
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         DASHBOARD
+    ====================================================== -->
+
+    <div
+        id="dashboardView"
+        class="app-shell hidden"
+    >
+
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div class="brand">
+
+                <div class="brand-mark small">
+                    A
+                </div>
+
+                <div>
+
+                    <strong>
+                        Aegis
+                    </strong>
+
+                    <span>
+                        Trading Intelligence
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <nav>
+
+                <button
+                    class="nav-item active"
+                    data-section="overview"
+                >
+                    Overview
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="events"
+                >
+                    Event Intelligence
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="trades"
+                >
+                    Trades
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="positions"
+                >
+                    Positions
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="performance"
+                >
+                    Performance
+                </button>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <div class="user-mini">
+
+                    <div
+                        class="avatar"
+                        id="userAvatar"
+                    >
+                        K
+                    </div>
+
+                    <div>
+
+                        <strong
+                            id="usernameLabel"
+                        >
+                            User
+                        </strong>
+
+                        <span
+                            id="emailLabel"
+                        >
+                            user@email.com
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn"
+                >
+                    Sign out
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN -->
+
+        <main class="main">
+
+
+            <!-- TOP BAR -->
+
+            <header class="topbar">
+
+                <div>
+
+                    <div class="eyebrow">
+                        AI TRADING CONTROL CENTER
+                    </div>
+
+                    <h2 id="pageTitle">
+                        Overview
+                    </h2>
+
+                </div>
+
+
+                <div class="status-pill">
+
+                    <span></span>
+
+                    <span class="status-label">
+                    </span>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+                 OVERVIEW
+            ================================================== -->
+
+            <section
+                id="overviewSection"
+                class="section"
+            >
+
+
+                <!-- AUTONOMOUS ENGINE -->
+
+                <div class="panel agent-panel">
+
+                    <div class="agent-header">
+
+                        <div>
+
+                            <div class="panel-kicker">
+                                AUTONOMOUS ENGINE
+                            </div>
+
+                            <h3>
+                                Aegis Live Operations
+                            </h3>
+
+                        </div>
+
+
+                        <div class="agent-status">
+
+                            <span
+                                id="agentEngineDot"
+                                class="agent-dot online"
+                            ></span>
+
+                            <span
+                                id="agentEngineState"
+                                class="agent-state positive"
+                            >
+                                ONLINE
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="agent-flow">
+
+                        <div class="agent-flow-step">
+
+                            <span>
+                                Mode
+                            </span>
+
+                            <strong id="agentMode">
+                                AUTONOMOUS
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-flow-step">
+
+                            <span>
+                                Cycle Interval
+                            </span>
+
+                            <strong id="agentInterval">
+                                60s
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-flow-step">
+
+                            <span>
+                                Last Cycle
+                            </span>
+
+                            <strong id="agentLastCycle">
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-flow-step">
+
+                            <span>
+                                Next Cycle
+                            </span>
+
+                            <strong id="agentNextCycle">
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="agent-stats">
+
+                        <div class="agent-stat">
+
+                            <span>
+                                Cycles
+                            </span>
+
+                            <strong id="agentCycles">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-stat">
+
+                            <span>
+                                Articles
+                            </span>
+
+                            <strong id="agentArticles">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-stat">
+
+                            <span>
+                                New Events
+                            </span>
+
+                            <strong id="agentNewEvents">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-stat">
+
+                            <span>
+                                Rejected
+                            </span>
+
+                            <strong id="agentRejected">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-stat">
+
+                            <span>
+                                AI Decisions
+                            </span>
+
+                            <strong id="agentDecisions">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-stat">
+
+                            <span>
+                                Trades
+                            </span>
+
+                            <strong id="agentTrades">
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="agent-stat">
+
+                            <span>
+                                Auto Exits
+                            </span>
+
+                            <strong id="agentExits">
+                                0
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="agent-last-event">
+
+                        <div
+                            class="agent-last-event-label"
+                        >
+                            Last Event Detected
+                        </div>
+
+                        <div
+                            id="agentLastEvent"
+                            class="agent-last-event-title"
+                        >
+                            No event processed yet.
+                        </div>
+
+                        <div
+                            id="agentLastEventTime"
+                            class="agent-last-event-time"
+                        >
+                            —
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="agentError"
+                        class="agent-error"
+                    >
+                        No errors reported.
+                    </div>
+
+                </div>
+
+
+                <!-- METRICS -->
+
+                <div class="metric-grid">
+
+                    <div
+                        class="metric-card primary-metric"
+                    >
+
+                        <div class="metric-label">
+                            Total Equity
+                        </div>
+
+                        <div
+                            class="metric-value"
+                            id="totalEquity"
+                        >
+                            $0.00
+                        </div>
+
+                        <div
+                            class="metric-change"
+                            id="portfolioReturn"
+                        >
+                            0.00%
+                        </div>
+
+                    </div>
+
+
+                    <div class="metric-card">
+
+                        <div class="metric-label">
+                            Cash Balance
+                        </div>
+
+                        <div
+                            class="metric-value"
+                            id="cashBalance"
+                        >
+                            $0.00
+                        </div>
+
+                    </div>
+
+
+                    <div class="metric-card">
+
+                        <div class="metric-label">
+                            Realized P&L
+                        </div>
+
+                        <div
+                            class="metric-value"
+                            id="realizedPnl"
+                        >
+                            $0.00
+                        </div>
+
+                    </div>
+
+
+                    <div class="metric-card">
+
+                        <div class="metric-label">
+                            Unrealized P&L
+                        </div>
+
+                        <div
+                            class="metric-value"
+                            id="unrealizedPnl"
+                        >
+                            $0.00
+                        </div>
+
+                    </div>
+
+
+                    <div class="metric-card">
+
+                        <div class="metric-label">
+                            Initial Capital
+                        </div>
+
+                        <div
+                            class="metric-value"
+                            id="initialBalance"
+                        >
+                            $0.00
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACCOUNT + POSITIONS -->
+
+                <div class="content-grid">
+
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <div>
+
+                                <div class="panel-kicker">
+                                    PORTFOLIO
+                                </div>
+
+                                <h3>
+                                    Account Overview
+                                </h3>
+
+                            </div>
+
+                            <button
+                                class="ghost-btn"
+                                id="refreshBtn"
+                            >
+                                Refresh
+                            </button>
+
+                        </div>
+
+
+                        <div class="portfolio-summary">
+
+                            <div>
+
+                                <span>
+                                    Account Return
+                                </span>
+
+                                <strong
+                                    id="summaryReturn"
+                                >
+                                    0.00%
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Open Positions
+                                </span>
+
+                                <strong
+                                    id="positionCount"
+                                >
+                                    0
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Total Trades
+                                </span>
+
+                                <strong
+                                    id="tradeCount"
+                                >
+                                    0
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <div>
+
+                                <div class="panel-kicker">
+                                    POSITIONS
+                                </div>
+
+                                <h3>
+                                    Open Positions
+                                </h3>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="overviewPositions"
+                            class="table-wrap"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- LATEST EVENTS -->
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <div>
+
+                            <div class="panel-kicker">
+                                EVENT INTELLIGENCE
+                            </div>
+
+                            <h3>
+                                Latest Events
+                            </h3>
+
+                        </div>
+
+
+                        <button
+                            class="ghost-btn"
+                            data-go="events"
+                        >
+                            View all
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="overviewEvents"
+                        class="event-list"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 EVENT INTELLIGENCE
+            ================================================== -->
+
+            <section
+                id="eventsSection"
+                class="section hidden"
+            >
+
+                <div class="section-intro">
+
+                    <div>
+
+                        <div class="panel-kicker">
+                            EVENT INTELLIGENCE
+                        </div>
+
+                        <h3>
+                            What Aegis is seeing and deciding
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        class="ghost-btn"
+                        id="eventsRefreshBtn"
+                    >
+                        Refresh
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="eventsList"
+                    class="event-list large"
+                ></div>
+
+            </section>
+
+
+            <!-- =================================================
+                 TRADES
+            ================================================== -->
+
+            <section
+                id="tradesSection"
+                class="section hidden"
+            >
+
+                <div class="section-intro">
+
+                    <div>
+
+                        <div class="panel-kicker">
+                            EXECUTION HISTORY
+                        </div>
+
+                        <h3>
+                            Trade History
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        class="ghost-btn"
+                        id="tradesRefreshBtn"
+                    >
+                        Refresh
+                    </button>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div
+                        id="tradesTable"
+                        class="table-wrap"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 POSITIONS
+            ================================================== -->
+
+            <section
+                id="positionsSection"
+                class="section hidden"
+            >
+
+                <div class="section-intro">
+
+                    <div>
+
+                        <div class="panel-kicker">
+                            PORTFOLIO
+                        </div>
+
+                        <h3>
+                            Open Positions
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        class="ghost-btn"
+                        id="positionsRefreshBtn"
+                    >
+                        Refresh
+                    </button>
+
+                </div>
+
+
+                <div class="panel">
+
+                    <div
+                        id="positionsTable"
+                        class="table-wrap"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 PERFORMANCE
+            ================================================== -->
+
+            <section
+                id="performanceSection"
+                class="section hidden"
+            >
+
+                <div class="section-intro">
+
+                    <div>
+
+                        <div class="panel-kicker">
+                            PERFORMANCE
+                        </div>
+
+                        <h3>
+                            Equity History
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        class="ghost-btn"
+                        id="performanceRefreshBtn"
+                    >
+                        Refresh
+                    </button>
+
+                </div>
+
+
+                <div class="panel chart-panel">
+
+                    <div class="chart-meta">
+
+                        <div>
+
+                            <span>
+                                Current Equity
+                            </span>
+
+                            <strong
+                                id="chartCurrentEquity"
+                            >
+                                $0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Return
+                            </span>
+
+                            <strong
+                                id="chartReturn"
+                            >
+                                0.00%
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="equityChart"
+                        ></canvas>
+
+                        <div
+                            id="chartEmpty"
+                            class="empty-state"
+                        >
+                            No equity snapshots yet.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js"
+    ></script>
+
+    <script
+        src="/static/app.js"
+    ></script>
+
+</body>
+
+</html>
