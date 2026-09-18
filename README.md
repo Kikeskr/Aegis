@@ -2,19 +2,25 @@
 
 ## Autonomous Event-Driven AI Trading Agent
 
-Aegis is an autonomous, event-driven AI trading agent that monitors market news, interprets market events using Qwen, generates structured trading decisions, applies portfolio-aware risk controls, and executes trades in a paper-trading environment.
+Aegis is an autonomous, event-driven AI trading agent built for the Bitget AI × Crypto Hackathon.
 
-The system is designed around an event → decision → risk → execution pipeline rather than continuous blind trading.
+Instead of continuously generating blind trading signals, Aegis monitors market news, identifies potentially market-moving events, uses Qwen to reason about those events, validates the proposed decision through an independent risk engine, and executes approved decisions in a persistent paper-trading environment.
+
+The core principle is:
+
+> Qwen proposes. Aegis Risk Engine authorizes. Paper Trader executes.
 
 ---
 
-## Architecture
+# What Aegis Does
+
+Aegis continuously processes the following pipeline:
 
 ```text
 Market News
      |
      v
-RSS News Fetcher
+News Ingestion
      |
      v
 Event Classification
@@ -34,36 +40,54 @@ Risk Engine
      v
 Paper Trader
      |
-     +------> Trade Journal
+     v
+Portfolio / P&L
      |
-     +------> Equity Curve
-                    |
-                    v
-             Performance Engine
-Core Features
-Event-Driven Trading
+     v
+Dashboard & Audit Trail
 
-Aegis reacts to market-moving news events rather than continuously generating random trade signals.
+The system is event-driven and autonomous. Once running, the agent continuously monitors market information, processes new events, makes decisions, applies risk controls, executes approved paper trades, and monitors open positions.
 
-Events are classified by:
+Key Features
+1. Event-Driven Market Intelligence
+
+Aegis monitors market news across multiple assets and sources.
+
+Current monitored assets include:
+
+NVDA
+AAPL
+GOOGL
+AMD
+TSLA
+MSFT
+AMZN
+META
+SPY
+QQQ
+
+News articles are converted into structured market events containing:
 
 Event type
 Description
 Sentiment
 Market impact
 Affected assets
-Qwen-Powered Market Analysis
 
-Qwen analyzes validated market events and produces a structured trading decision.
+Low-value or neutral events can be rejected before reaching the AI decision layer.
 
-Each decision contains:
+2. Qwen-Powered Trading Decisions
+
+Aegis uses Qwen to analyze validated market events.
+
+The AI produces a structured trading decision containing:
 
 Asset
 Action
 Confidence
-Position size
-Stop loss
-Take profit
+Position Size
+Stop Loss
+Take Profit
 Reasoning
 
 Supported actions:
@@ -71,33 +95,37 @@ Supported actions:
 BUY
 SELL
 HOLD
-Portfolio Awareness
 
-Aegis provides the current portfolio state to the AI before a trade decision is generated.
+The AI is not given unrestricted control over execution.
 
-This helps prevent unnecessary duplicate exposure.
+Its output is treated as a proposal that must pass the risk layer.
+
+3. Portfolio Awareness
+
+Before generating a decision, Aegis provides the current portfolio state to the AI.
+
+This allows the system to consider existing exposure.
 
 For example:
 
-Existing position:
-
+Existing Position:
 NVDA LONG
 
-New event:
+New Event:
+Positive NVDA News
 
-Positive NVDA news
-
-Qwen decision:
-
+AI:
 HOLD
 
-Instead of blindly opening another NVDA long position.
+Rather than blindly opening another position in the same direction.
 
-Risk Engine
+Aegis also prevents duplicate same-side positions through its risk and execution layers.
 
-Every AI decision passes through a dedicated risk layer before execution.
+4. Independent Risk Engine
 
-The risk engine controls:
+Every AI decision passes through a dedicated risk engine before execution.
+
+The risk engine validates:
 
 Minimum AI confidence
 Maximum position size
@@ -105,17 +133,50 @@ Maximum trade risk
 Maximum stop-loss distance
 Risk/reward ratio
 Existing position conflicts
-Full-position exits
+Exit position sizing
+Invalid trading actions
 
-Aegis separates AI reasoning from trade authorization.
+The architecture deliberately separates AI reasoning from trade authorization.
 
-The AI proposes.
+Qwen
+  |
+  | proposes
+  v
+Risk Engine
+  |
+  | authorizes
+  v
+Paper Trader
 
-The risk engine determines whether the proposal satisfies the configured risk rules.
+This prevents the language model from having unrestricted authority over execution.
 
-Paper Trading
+5. Autonomous Position Management
 
-Aegis currently executes trades in a simulated portfolio.
+Aegis continuously monitors open positions.
+
+Positions can be closed automatically when:
+
+Stop-loss is reached
+Take-profit is reached
+An opposing AI decision results in an exit
+
+A position can also be manually closed through the web dashboard.
+
+Manual closure uses the same accounting path as automatic exits, ensuring that:
+
+P&L is calculated
+Return percentage is recorded
+Wallet balance is updated
+Realized P&L is updated
+The trade is recorded
+The position is removed
+6. Paper Trading
+
+Aegis currently operates entirely in a simulated trading environment.
+
+Each user receives a paper portfolio with:
+
+Initial Balance: $10,000
 
 The paper trader supports:
 
@@ -126,52 +187,214 @@ Stop-loss
 Take-profit
 Realized P&L
 Unrealized P&L
-Portfolio equity tracking
-Persistent account state
+Portfolio equity
+Return percentage
+Persistent trade history
 
-No live funds are required.
+No real funds are used.
 
-Event Memory
+7. Multi-User Web Dashboard
 
-Processed news events are stored using their article URLs as event identifiers.
+Aegis includes a FastAPI-powered web application.
 
-This prevents Aegis from repeatedly processing the same news article.
+Users can create accounts and receive their own paper portfolio.
 
-New article
+The dashboard provides:
+
+Overview
+Event Intelligence
+Trades
+Positions
+Performance
+Agent Status
+
+Users can view:
+
+Current equity
+Cash balance
+Realized P&L
+Unrealized P&L
+Portfolio return
+Open positions
+Current market prices
+Trade history
+AI decisions
+AI reasoning
+Risk decisions
+Execution results
+Agent activity
+Equity history
+
+The dashboard automatically synchronizes with the backend.
+
+8. Event Audit Trail
+
+Every processed event can be recorded with its complete decision pipeline.
+
+Aegis records:
+
+Market Event
      |
      v
-Already processed?
+Filter Decision
+     |
+     v
+AI Decision
+     |
+     v
+Risk Decision
+     |
+     v
+Execution Result
+     |
+     v
+Portfolio Result
+
+This makes the agent's decisions observable rather than treating the AI as a black box.
+
+9. Event Memory
+
+Processed news articles are tracked using their article URLs.
+
+This prevents the same article from being repeatedly processed.
+
+New Article
+     |
+     v
+Already Processed?
     / \
   YES  NO
    |    |
  Skip  Process
-Trade Journal
+10. Autonomous Worker
 
-Trading decisions are recorded with:
+Once started, the autonomous worker continuously performs:
 
-Timestamp
-Market event
-Asset
-Action
-AI confidence
-Position size
-Stop loss
-Take profit
-AI reasoning
-Risk decision
-Execution result
-Performance Tracking
+Monitor Existing Positions
+          |
+          v
+Fetch Market News
+          |
+          v
+Identify New Events
+          |
+          v
+Filter Events
+          |
+          v
+Ask Qwen for Decisions
+          |
+          v
+Apply Risk Controls
+          |
+          v
+Execute Approved Trades
+          |
+          v
+Record Portfolio State
 
-Aegis tracks:
+The worker operates independently of the dashboard.
 
-Total return
-Maximum drawdown
-Win rate
-Sharpe ratio
-Portfolio equity
+The dashboard acts as the control and observability layer for the autonomous system.
+
+11. Position Capacity Control
+
+Aegis limits the number of concurrent open positions per user.
+
+The configured maximum is:
+
+5 open positions
+
+When a user's portfolio reaches the configured capacity, the worker stops sourcing new opportunities for that portfolio until capacity becomes available again.
+
+Existing positions continue to be monitored for exits.
+
+Architecture
+                    AEGIS
+                      |
+              Autonomous Worker
+                      |
+          +-----------+-----------+
+          |                       |
+          v                       v
+     News Sources            Position Monitor
+          |                       |
+          v                       v
+    Event Detection          SL / TP Checks
+          |
+          v
+     Event Filter
+          |
+          v
+       Qwen AI
+          |
+          v
+  Portfolio Awareness
+          |
+          v
+     Risk Engine
+          |
+          v
+     Paper Trader
+          |
+     +----+----+
+     |         |
+     v         v
+  Database   P&L
+     |
+     v
+FastAPI Backend
+     |
+     v
+Web Dashboard
+Web Application Architecture
+Browser
+   |
+   v
+FastAPI
+   |
+   +----------------+
+   |                |
+   v                v
+Authentication   Aegis Service
+                     |
+             +-------+-------+
+             |       |       |
+             v       v       v
+           Qwen    Risk    Trader
+             |       |       |
+             +-------+-------+
+                     |
+                     v
+                  SQLite
+Technology Stack
+Backend
+Python
+FastAPI
+SQLAlchemy
+SQLite
+Pydantic
+JWT authentication
+AI
+Qwen
+Structured AI trading decisions
+Market Data
+Yahoo Finance
+Google News RSS
+Multi-asset news ingestion
+Frontend
+HTML
+CSS
+JavaScript
+Chart.js
+Trading
+Custom paper-trading engine
+Portfolio-aware execution
+Stop-loss / take-profit monitoring
+Persistent trade records
 Project Structure
-aegis/
-│
+AEGIS/
+|
 ├── agent/
 │   ├── event_filter.py
 │   ├── event_loop.py
@@ -180,47 +403,57 @@ aegis/
 │   ├── price_feed.py
 │   ├── qwen_agent.py
 │   ├── rss_news_fetcher.py
-│   └── schemas.py
-│
+│   ├── schemas.py
+│   ├── database_event_memory.py
+│   └── background_worker.py
+|
+├── api/
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── auth.py
+│   ├── aegis_service.py
+│   └── server.py
+|
+├── execution/
+│   ├── paper_trader.py
+│   └── database_paper_trader.py
+|
+├── risk/
+│   └── risk_engine.py
+|
+├── performance/
+│   └── performance_engine.py
+|
+├── journal/
+│   └── trade_journal.py
+|
+├── frontend/
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+|
 ├── data/
 │   ├── portfolio.json
 │   ├── processed_events.json
 │   └── trades.json
-│
-├── execution/
-│   └── paper_trader.py
-│
-├── journal/
-│   └── trade_journal.py
-│
-├── performance/
-│   └── performance_engine.py
-│
-├── risk/
-│   └── risk_engine.py
-│
+|
 ├── main.py
-├── requirements.txt
-├── test_end_to_end.py
-├── test_paper_trader.py
-├── test_performance.py
-├── test_portfolio_awareness.py
-├── test_qwen.py
-└── test_risk_engine.py
+└── README.md
 Installation
 
 Clone the repository:
 
-git clone <YOUR_REPOSITORY_URL>
-cd aegis
+git clone https://github.com/Kikeskr/Aegis.git
+cd Aegis
 
 Create a virtual environment:
 
 python -m venv .venv
 
-Activate it on Windows Git Bash:
+Activate it on Windows:
 
-source .venv/Scripts/activate
+.venv\Scripts\activate
 
 Install dependencies:
 
@@ -235,37 +468,111 @@ Never commit .env or API keys to GitHub.
 
 Running Aegis
 
-Start the autonomous agent:
+Start the web application and autonomous engine:
 
-python main.py
+python -m uvicorn api.server:app --reload
 
-Aegis will continuously:
+The application will be available at:
 
-Fetch market news
-Identify new events
-Classify events
-Filter low-value events
-Ask Qwen for a structured decision
-Check portfolio exposure
-Apply risk controls
-Execute approved decisions in paper trading
-Monitor open positions
-Record portfolio equity
-Display performance metrics
+http://127.0.0.1:8000
 
-Press:
+The FastAPI startup process initializes the autonomous event engine.
 
-CTRL+C
+Once running, Aegis continuously monitors market events and positions.
 
-to stop the agent safely.
+Autonomous Processing
+
+A typical cycle looks like:
+
+AEGIS AUTONOMOUS EVENT CYCLE
+        |
+        v
+Position Monitor
+        |
+        v
+Market News Fetch
+        |
+        v
+New Market Event
+        |
+        v
+Event Filter
+        |
+        v
+Qwen Analysis
+        |
+        v
+Risk Evaluation
+        |
+        v
+Paper Execution
+        |
+        v
+Portfolio Update
+Price Monitoring
+
+Aegis retrieves current market prices for open positions and uses them to calculate:
+
+Current position value
+Unrealized P&L
+Return percentage
+Stop-loss conditions
+Take-profit conditions
+Portfolio equity
+
+The dashboard automatically refreshes portfolio and position data.
+
+Authentication
+
+Users can:
+
+Create Account
+      |
+      v
+Receive $10,000 Paper Wallet
+      |
+      v
+Automatically Sign In
+      |
+      v
+Access Personal Dashboard
+
+Each portfolio is associated with its authenticated user.
+
+Position and portfolio operations are scoped to the user's own paper wallet.
+
+Risk Philosophy
+
+Aegis follows a layered authorization model:
+
+             AI
+              |
+              | proposes
+              v
+        Portfolio State
+              |
+              v
+         Risk Engine
+              |
+              | authorizes
+              v
+        Paper Trader
+
+The AI is responsible for market reasoning.
+
+The risk engine is responsible for enforcing configured trading constraints.
+
+The paper trader is responsible for execution and accounting.
+
+This separation creates a clear boundary between AI reasoning and execution.
 
 Testing
 
 Compile the project:
 
-python -m compileall agent execution journal performance risk main.py
+python -m compileall agent api execution journal performance risk main.py
 
-Run the individual tests:
+Run the available tests individually where applicable:
 
 python test_paper_trader.py
 python test_performance.py
@@ -273,79 +580,109 @@ python test_portfolio_awareness.py
 python test_qwen.py
 python test_risk_engine.py
 python test_end_to_end.py
-End-to-End Pipeline
 
-The final integration test validates the complete Aegis workflow:
+The system has also been tested through the live autonomous pipeline, including:
 
-Market Event
+News ingestion
+Event filtering
+Qwen analysis
+Risk validation
+Paper execution
+Portfolio updates
+Position monitoring
+Automatic exits
+Manual position closing
+Dashboard synchronization
+Multi-user paper portfolios
+Demonstrated Workflow
+
+Aegis has demonstrated the complete event-driven workflow:
+
+Market News
      |
      v
-Event Classification
+New Event
      |
      v
 Event Filter
      |
      v
-Qwen Analysis
+Qwen Decision
      |
      v
-Portfolio Awareness
-     |
-     v
-Risk Engine
+Risk Validation
      |
      v
 Paper Execution
      |
      v
-Equity Recording
+Open Position
      |
      v
-Trade Journal
+Live Price Monitoring
      |
      v
-Performance Metrics
+Exit
+     |
+     v
+Realized P&L
 
-The pipeline has been tested successfully with a fresh synthetic market event.
-
-The test demonstrated that a high-impact positive NVDA event was classified, filtered, analyzed by Qwen, evaluated against the existing portfolio, approved by the risk engine, and handled without opening an unnecessary duplicate NVDA position.
-
-Risk Philosophy
-
-Aegis follows a layered decision model:
-
-AI proposes a trade
-        |
-        v
-Portfolio checks exposure
-        |
-        v
-Risk engine validates the proposal
-        |
-        v
-Only approved decisions reach execution
-
-This prevents the language model from having unrestricted control over trade execution.
-
-The risk layer acts as a separate authorization boundary between AI reasoning and paper execution.
+The web dashboard exposes this process so that users can observe what the autonomous agent is doing.
 
 Current Scope
 
-Aegis currently operates in a paper-trading environment.
+Aegis is currently a paper-trading system designed to demonstrate autonomous event-driven AI trading.
 
-The project focuses on demonstrating:
+The project focuses on:
 
 Autonomous event processing
 AI-assisted market reasoning
 Structured trading decisions
 Portfolio-aware behavior
-Risk-controlled execution
-Automated performance tracking
+Independent risk authorization
+Automated paper execution
+Position monitoring
+Automated exits
+Performance tracking
+Multi-user paper portfolios
+Transparent decision auditing
 
-Live trading is intentionally outside the current paper-trading demonstration scope.
+Live-money trading is intentionally outside the current demonstration scope.
 
-Disclaimer
+Security & Safety
 
-Aegis is an experimental software project and is not financial advice.
+Aegis does not use real trading funds.
 
-The current implementation uses simulated paper trading and simplified risk/performance models. It should not be used to trade real funds without substantial additional testing, validation, monitoring, and risk controls.
+API credentials must remain outside the repository.
+
+The current system is an experimental software project and should not be used for real-money trading without substantial additional development, testing, security review, market-data validation, execution safeguards, monitoring, and risk controls.
+
+Hackathon Context
+
+Aegis was developed for the:
+
+Bitget AI × Crypto Hackathon — Build What Trades Next
+
+The project focuses on the Agentic Trading / Event-Driven Agent concept.
+
+The system demonstrates how an AI agent can:
+
+Sense
+  ↓
+Interpret
+  ↓
+Reason
+  ↓
+Check Risk
+  ↓
+Act
+  ↓
+Observe
+  ↓
+Manage
+
+Rather than simply generating trading predictions, Aegis demonstrates an autonomous decision pipeline connecting market events, AI reasoning, risk authorization, execution, and portfolio management.
+
+License
+
+This project is provided for experimental and educational purposes.
