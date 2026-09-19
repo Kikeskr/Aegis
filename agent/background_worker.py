@@ -1,5 +1,6 @@
 import time
 import threading
+
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
@@ -14,14 +15,56 @@ from agent.rss_news_fetcher import RSSNewsFetcher
 
 
 class AegisBackgroundWorker:
+    """
+    Autonomous Aegis event-driven trading worker.
+
+    Pipeline:
+
+        Market News
+            ↓
+        Event Memory
+            ↓
+        Qwen Classification
+            ↓
+        Aegis Service
+            ↓
+        Risk Engine
+            ↓
+        Paper Trader
+            ↓
+        Portfolio
+
+    The worker never places live trades.
+    """
+
     MAX_OPEN_TRADES = 5
+
+    NEWS_PER_SYMBOL = 10
+
+    SYMBOLS = [
+        "NVDA",
+        "AAPL",
+        "GOOGL",
+        "AMD",
+        "TSLA",
+        "MSFT",
+        "AMZN",
+        "META",
+        "SPY",
+        "QQQ",
+    ]
 
     def __init__(self, interval=60):
         self.interval = interval
+
         self.running = False
         self.thread = None
 
         self.news_fetcher = RSSNewsFetcher()
+
+        # IMPORTANT:
+        # The autonomous worker uses the database-backed
+        # event memory, not the JSON EventMemory class.
         self.event_memory = DatabaseEventMemory()
 
         # ========================================================
@@ -78,7 +121,12 @@ class AegisBackgroundWorker:
         if self.thread:
             self.thread.join(timeout=2)
 
-        self.event_memory.close()
+        try:
+            self.event_memory.close()
+        except Exception as error:
+            print(
+                f"[AEGIS WORKER] Event memory close warning: {error}"
+            )
 
         print("[AEGIS WORKER] Stopped.")
 
@@ -167,21 +215,14 @@ class AegisBackgroundWorker:
             # 4. FETCH MARKET NEWS
             # ----------------------------------------------------
 
+            print(
+                "[AEGIS WORKER] Fetching market news..."
+            )
+
             articles = (
                 self.news_fetcher.fetch_market_news(
-                    symbols=[
-                        "NVDA",
-                        "AAPL",
-                        "GOOGL",
-                        "AMD",
-                        "TSLA",
-                        "MSFT",
-                        "AMZN",
-                        "META",
-                        "SPY",
-                        "QQQ",
-                    ],
-                    per_symbol=3,
+                    symbols=self.SYMBOLS,
+                    per_symbol=self.NEWS_PER_SYMBOL,
                 )
             )
 
@@ -207,10 +248,13 @@ class AegisBackgroundWorker:
             # 5. PROCESS NEW EVENTS
             # ----------------------------------------------------
 
+            processed_this_cycle = 0
+            skipped_this_cycle = 0
+
             for article in articles:
 
-                # Stop processing new information once all
-                # available trade capacity has been consumed.
+                # Stop processing once every user's trade
+                # capacity has been consumed.
                 if not self.has_trade_capacity(
                     db=db,
                     users=users,
@@ -222,7 +266,7 @@ class AegisBackgroundWorker:
                     )
 
                     print(
-                        "[AEGIS WORKER] Stopping event sourcing "
+                        "[AEGIS WORKER] Stopping event processing "
                         "for this cycle."
                     )
 
@@ -232,6 +276,8 @@ class AegisBackgroundWorker:
                     article
                 ):
 
+                    skipped_this_cycle += 1
+
                     print(
                         "[EVENT MEMORY] Already processed: "
                         f"{article.get('title', '')}"
@@ -239,8 +285,16 @@ class AegisBackgroundWorker:
 
                     continue
 
+                # This is a genuinely new market event.
                 with self._stats_lock:
                     self.new_events += 1
+
+                processed_this_cycle += 1
+
+                print(
+                    "\n[AEGIS WORKER] NEW EVENT "
+                    f"{processed_this_cycle}"
+                )
 
                 self.process_new_event(
                     db=db,
@@ -248,9 +302,27 @@ class AegisBackgroundWorker:
                     article=article,
                 )
 
+                # Only mark the article after it has passed
+                # through the autonomous event pipeline.
                 self.event_memory.mark_processed(
                     article
                 )
+
+            print(
+                "\n[AEGIS WORKER] Cycle summary:"
+            )
+
+            print(
+                f"  Articles fetched: {article_count}"
+            )
+
+            print(
+                f"  New events: {processed_this_cycle}"
+            )
+
+            print(
+                f"  Already processed: {skipped_this_cycle}"
+            )
 
             # ----------------------------------------------------
             # CYCLE COMPLETE
@@ -267,6 +339,7 @@ class AegisBackgroundWorker:
             with self._stats_lock:
 
                 self.last_cycle_at = cycle_time
+
                 self.last_cycle_duration = round(
                     duration,
                     3,
@@ -287,8 +360,8 @@ class AegisBackgroundWorker:
         Returns True if at least one user has fewer than
         MAX_OPEN_TRADES open positions.
 
-        Aegis stops sourcing new market information when
-        all user wallets have reached the maximum.
+        Aegis stops processing new market events when all
+        user wallets have reached the maximum.
         """
 
         for user in users:
@@ -401,9 +474,11 @@ class AegisBackgroundWorker:
 
                     asset = result["asset"]
                     price = result["price"]
+
                     triggered = result[
                         "exit_triggered"
                     ]
+
                     message = result["message"]
 
                     if triggered:
@@ -706,10 +781,13 @@ class AegisBackgroundWorker:
 
             return {
                 "running": self.running,
+
                 "interval_seconds": self.interval,
 
                 "started_at": self.started_at,
+
                 "last_cycle_at": self.last_cycle_at,
+
                 "last_cycle_duration": (
                     self.last_cycle_duration
                 ),
@@ -759,7 +837,14 @@ class AegisBackgroundWorker:
                 ),
 
                 "mode": "autonomous",
-                "max_open_trades": self.MAX_OPEN_TRADES,
+
+                "max_open_trades": (
+                    self.MAX_OPEN_TRADES
+                ),
+
+                "news_per_symbol": (
+                    self.NEWS_PER_SYMBOL
+                ),
             }
 
     # ============================================================

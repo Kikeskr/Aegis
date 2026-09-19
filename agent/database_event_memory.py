@@ -1,7 +1,12 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text, create_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from sqlalchemy import DateTime, Integer, String, create_engine
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    sessionmaker,
+)
 
 from api.database import DATABASE_URL
 
@@ -68,12 +73,20 @@ class DatabaseEventMemory:
     def __init__(self):
         self.db = SessionLocal()
 
-    # ========================================================
+    # ============================================================
     # EVENT KEY
-    # ========================================================
+    # ============================================================
 
     @staticmethod
     def event_key(article: dict) -> str:
+        """
+        Generate a stable identifier for a market event.
+
+        URL is preferred because it uniquely identifies the
+        source article.
+
+        If URL is unavailable, normalized title is used.
+        """
 
         url = (
             article.get(
@@ -97,9 +110,9 @@ class DatabaseEventMemory:
 
         return title
 
-    # ========================================================
+    # ============================================================
     # CHECK
-    # ========================================================
+    # ============================================================
 
     def is_processed(
         self,
@@ -111,21 +124,21 @@ class DatabaseEventMemory:
         if not key:
             return False
 
-        return (
+        record = (
             self.db.query(
                 ProcessedEvent
             )
             .filter(
-                ProcessedEvent.event_key
-                == key
+                ProcessedEvent.event_key == key
             )
             .first()
-            is not None
         )
 
-    # ========================================================
+        return record is not None
+
+    # ============================================================
     # MARK PROCESSED
-    # ========================================================
+    # ============================================================
 
     def mark_processed(
         self,
@@ -142,8 +155,7 @@ class DatabaseEventMemory:
                 ProcessedEvent
             )
             .filter(
-                ProcessedEvent.event_key
-                == key
+                ProcessedEvent.event_key == key
             )
             .first()
         )
@@ -153,23 +165,53 @@ class DatabaseEventMemory:
 
         record = ProcessedEvent(
             event_key=key,
-            title=article.get(
-                "title",
-                "",
+            title=(
+                article.get(
+                    "title",
+                    "",
+                )
+                .strip()
             ),
-            url=article.get(
-                "url",
-                "",
+            url=(
+                article.get(
+                    "url",
+                    "",
+                )
+                .strip()
             ),
         )
 
         self.db.add(record)
-        self.db.commit()
 
-    # ========================================================
+        try:
+            self.db.commit()
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+    # ============================================================
+    # COUNT
+    # ============================================================
+
+    def count(self) -> int:
+        return (
+            self.db.query(
+                ProcessedEvent
+            ).count()
+        )
+
+    # ============================================================
     # CLOSE
-    # ========================================================
+    # ============================================================
 
     def close(self):
 
-        self.db.close()
+        try:
+            self.db.close()
+
+        except Exception as error:
+
+            print(
+                f"[EVENT MEMORY] Close error: {error}"
+            )

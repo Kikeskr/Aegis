@@ -4,6 +4,7 @@ import re
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+
 from datetime import datetime, timezone
 
 
@@ -19,9 +20,15 @@ class RSSNewsFetcher:
     AegisBackgroundWorker.
     """
 
-    GOOGLE_NEWS_URL = "https://news.google.com/rss/search"
+    GOOGLE_NEWS_URL = (
+        "https://news.google.com/rss/search"
+    )
 
-    YAHOO_URL = "https://feeds.finance.yahoo.com/rss/2.0/headline"
+    YAHOO_URL = (
+        "https://feeds.finance.yahoo.com/rss/2.0/headline"
+    )
+
+    DEFAULT_PER_SYMBOL = 10
 
     DEFAULT_SYMBOLS = [
         "NVDA",
@@ -52,14 +59,19 @@ class RSSNewsFetcher:
     def __init__(self, timeout: int = 10):
         self.timeout = timeout
 
+    # ============================================================
+    # SINGLE SYMBOL
+    # ============================================================
+
     def fetch_news(
         self,
         symbol: str = "NVDA",
-        limit: int = 5,
+        limit: int = DEFAULT_PER_SYMBOL,
     ) -> list[dict]:
         """
         Backwards-compatible single-symbol fetch.
         """
+
         symbol = symbol.upper()
 
         articles = []
@@ -78,30 +90,43 @@ class RSSNewsFetcher:
             )
         )
 
-        return self._deduplicate_and_sort(articles, limit=limit)
+        return self._deduplicate_and_sort(
+            articles,
+            limit=limit,
+        )
+
+    # ============================================================
+    # MULTI-SYMBOL MARKET NEWS
+    # ============================================================
 
     def fetch_market_news(
         self,
         symbols: list[str] | None = None,
-        per_symbol: int = 3,
+        per_symbol: int = DEFAULT_PER_SYMBOL,
     ) -> list[dict]:
         """
-        Fetch fresh market news across multiple assets.
+        Fetch market news across multiple assets.
 
-        This is the main ingestion method used by the autonomous worker.
+        The autonomous Aegis worker uses this method to build
+        the event stream consumed by the event engine.
         """
+
         symbols = symbols or self.DEFAULT_SYMBOLS
 
         all_articles = []
 
         for symbol in symbols:
+
             try:
+
                 articles = self.fetch_news(
                     symbol=symbol,
                     limit=per_symbol,
                 )
 
-                all_articles.extend(articles)
+                all_articles.extend(
+                    articles
+                )
 
                 print(
                     f"[NEWS] {symbol}: "
@@ -109,8 +134,10 @@ class RSSNewsFetcher:
                 )
 
             except Exception as error:
+
                 print(
-                    f"[NEWS] {symbol} fetch failed: {error}"
+                    f"[NEWS] {symbol} fetch failed: "
+                    f"{error}"
                 )
 
         return self._deduplicate_and_sort(
@@ -118,11 +145,16 @@ class RSSNewsFetcher:
             limit=None,
         )
 
+    # ============================================================
+    # GOOGLE NEWS
+    # ============================================================
+
     def _fetch_google_news(
         self,
         symbol: str,
         limit: int,
     ) -> list[dict]:
+
         query = self.SYMBOL_QUERIES.get(
             symbol,
             f"{symbol} stock market",
@@ -137,35 +169,55 @@ class RSSNewsFetcher:
             }
         )
 
-        url = f"{self.GOOGLE_NEWS_URL}?{params}"
+        url = (
+            f"{self.GOOGLE_NEWS_URL}"
+            f"?{params}"
+        )
 
         root = self._fetch_xml(url)
 
         articles = []
 
         for item in root.findall(".//item")[:limit]:
+
             title = self._clean_text(
-                item.findtext("title", "")
+                item.findtext(
+                    "title",
+                    "",
+                )
             )
 
             link = self._clean_text(
-                item.findtext("link", "")
+                item.findtext(
+                    "link",
+                    "",
+                )
             )
 
             description = self._clean_text(
-                item.findtext("description", "")
+                item.findtext(
+                    "description",
+                    "",
+                )
             )
 
             pub_date = self._clean_text(
-                item.findtext("pubDate", "")
+                item.findtext(
+                    "pubDate",
+                    "",
+                )
             )
 
-            source_node = item.find("source")
+            source_node = item.find(
+                "source"
+            )
 
             source = (
                 source_node.text.strip()
-                if source_node is not None
-                and source_node.text
+                if (
+                    source_node is not None
+                    and source_node.text
+                )
                 else "Google News"
             )
 
@@ -185,11 +237,16 @@ class RSSNewsFetcher:
 
         return articles
 
+    # ============================================================
+    # YAHOO FINANCE
+    # ============================================================
+
     def _fetch_yahoo(
         self,
         symbol: str,
         limit: int,
     ) -> list[dict]:
+
         params = urllib.parse.urlencode(
             {
                 "s": symbol,
@@ -198,27 +255,43 @@ class RSSNewsFetcher:
             }
         )
 
-        url = f"{self.YAHOO_URL}?{params}"
+        url = (
+            f"{self.YAHOO_URL}"
+            f"?{params}"
+        )
 
         root = self._fetch_xml(url)
 
         articles = []
 
         for item in root.findall(".//item")[:limit]:
+
             title = self._clean_text(
-                item.findtext("title", "")
+                item.findtext(
+                    "title",
+                    "",
+                )
             )
 
             link = self._clean_text(
-                item.findtext("link", "")
+                item.findtext(
+                    "link",
+                    "",
+                )
             )
 
             description = self._clean_text(
-                item.findtext("description", "")
+                item.findtext(
+                    "description",
+                    "",
+                )
             )
 
             pub_date = self._clean_text(
-                item.findtext("pubDate", "")
+                item.findtext(
+                    "pubDate",
+                    "",
+                )
             )
 
             if not title or not link:
@@ -237,7 +310,15 @@ class RSSNewsFetcher:
 
         return articles
 
-    def _fetch_xml(self, url: str) -> ET.Element:
+    # ============================================================
+    # XML FETCH
+    # ============================================================
+
+    def _fetch_xml(
+        self,
+        url: str,
+    ) -> ET.Element:
+
         request = urllib.request.Request(
             url,
             headers={
@@ -254,22 +335,43 @@ class RSSNewsFetcher:
             request,
             timeout=self.timeout,
         ) as response:
+
             data = response.read()
 
         return ET.fromstring(data)
+
+    # ============================================================
+    # DEDUPLICATION
+    # ============================================================
 
     @staticmethod
     def _deduplicate_and_sort(
         articles: list[dict],
         limit: int | None = None,
     ) -> list[dict]:
+
         seen_urls = set()
         seen_titles = set()
+
         unique = []
 
         for article in articles:
-            url = article.get("url", "").strip()
-            title = article.get("title", "").strip()
+
+            url = (
+                article.get(
+                    "url",
+                    "",
+                )
+                .strip()
+            )
+
+            title = (
+                article.get(
+                    "title",
+                    "",
+                )
+                .strip()
+            )
 
             normalized_title = re.sub(
                 r"\s+",
@@ -277,17 +379,25 @@ class RSSNewsFetcher:
                 title.lower(),
             )
 
-            if url and url in seen_urls:
+            if (
+                url
+                and url in seen_urls
+            ):
                 continue
 
-            if normalized_title and normalized_title in seen_titles:
+            if (
+                normalized_title
+                and normalized_title in seen_titles
+            ):
                 continue
 
             if url:
                 seen_urls.add(url)
 
             if normalized_title:
-                seen_titles.add(normalized_title)
+                seen_titles.add(
+                    normalized_title
+                )
 
             unique.append(article)
 
@@ -301,33 +411,59 @@ class RSSNewsFetcher:
 
         return unique
 
+    # ============================================================
+    # ARTICLE SORTING
+    # ============================================================
+
     @staticmethod
-    def _article_sort_key(article: dict):
-        value = article.get("published_at", "")
+    def _article_sort_key(
+        article: dict,
+    ):
+
+        value = article.get(
+            "published_at",
+            "",
+        )
 
         if not value:
+
             return datetime.min.replace(
                 tzinfo=timezone.utc
             )
 
         try:
-            from email.utils import parsedate_to_datetime
 
-            parsed = parsedate_to_datetime(value)
+            from email.utils import (
+                parsedate_to_datetime,
+            )
+
+            parsed = parsedate_to_datetime(
+                value
+            )
 
             if parsed.tzinfo is None:
+
                 parsed = parsed.replace(
                     tzinfo=timezone.utc
                 )
 
             return parsed
+
         except Exception:
+
             return datetime.min.replace(
                 tzinfo=timezone.utc
             )
 
+    # ============================================================
+    # TEXT CLEANING
+    # ============================================================
+
     @staticmethod
-    def _clean_text(value: str | None) -> str:
+    def _clean_text(
+        value: str | None,
+    ) -> str:
+
         if not value:
             return ""
 
@@ -356,34 +492,64 @@ class RSSNewsFetcher:
         return value.strip()
 
 
+# ================================================================
+# DIRECT TEST
+# ================================================================
+
 if __name__ == "__main__":
+
     fetcher = RSSNewsFetcher()
 
     print("=" * 70)
     print("AEGIS MULTI-SOURCE NEWS TEST")
     print("=" * 70)
 
-    articles = fetcher.fetch_market_news(
-        symbols=[
-            "NVDA",
-            "AAPL",
-            "GOOGL",
-            "AMD",
-            "TSLA",
-        ],
-        per_symbol=3,
+    articles = (
+        fetcher.fetch_market_news(
+            symbols=[
+                "NVDA",
+                "AAPL",
+                "GOOGL",
+                "AMD",
+                "TSLA",
+            ],
+            per_symbol=10,
+        )
     )
 
     print(
-        f"\nTotal unique articles: {len(articles)}\n"
+        f"\nTotal unique articles: "
+        f"{len(articles)}\n"
     )
 
     for index, article in enumerate(
         articles,
         start=1,
     ):
+
         print("-" * 70)
-        print(f"{index}. {article['title']}")
-        print(f"Source: {article['source']}")
-        print(f"Symbol: {article['symbol']}")
-        print(f"URL: {article['url']}")
+
+        print(
+            f"{index}. "
+            f"{article['title']}"
+        )
+
+        print(
+            f"Source: "
+            f"{article['source']}"
+        )
+
+        print(
+            f"Symbol: "
+            f"{article['symbol']}"
+        )
+
+        print(
+            f"Published: "
+            f"{article['published_at']}"
+        )
+
+        print(
+            f"URL: "
+            f"{article['url']}"
+        )

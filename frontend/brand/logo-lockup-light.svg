@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 100" width="520" height="100">
+  <title>Aegis RedTeam Desk</title>
+  <defs>
+    <clipPath id="shieldClipLt"><path d="M25,16 L75,16 L75,46 L50,91 L25,46 Z"/></clipPath>
+  </defs>
+  <path d="M25,16 L75,16 L75,46 L50,91 L25,46 Z" fill="#0A0B0D"/>
+  <g clip-path="url(#shieldClipLt)">
+    <path d="M14,76 L40,20 L54,20 L28,76 Z" fill="#C81E3A"/>
+  </g>
+  <text x="102" y="52" font-family="Space Grotesk, Avenir Next, Futura, sans-serif" font-weight="600" font-size="40" letter-spacing="1" fill="#0A0B0D">AEGIS</text>
+  <line x1="103" y1="66" x2="500" y2="66" stroke="#D8D3C8" stroke-width="1"/>
+  <text x="103" y="84" font-family="Space Grotesk, Avenir Next, Futura, sans-serif" font-weight="500" font-size="15" letter-spacing="5" fill="#C81E3A">REDTEAM DESK</text>
+</svg>

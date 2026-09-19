@@ -1,417 +1,876 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0A0B0D">
+<link rel="icon" type="image/svg+xml" href="/static/brand/favicon.svg">
+<title>Aegis — RedTeam Desk</title>
 
-    <meta charset="UTF-8">
+<link rel="stylesheet" href="/static/styles.css">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<style>
+/* ============================================================
+   AEGIS REDTEAM DESK — INDEX OVERRIDES
+   Keeps the existing app.js contract intact.
+   ============================================================ */
 
-    <title>Aegis — AI Trading Dashboard</title>
+:root {
+    --obsidian: #0A0B0D;
+    --graphite: #1B1E23;
+    --graphite-2: #232629;
+    --bone: #F4EFE6;
+    --bone-dim: #E4DECF;
+    --signal: #C81E3A;
+    --signal-dim: #8F1527;
+    --steel: #9BA3AE;
+    --steel-dim: #5B6269;
+}
 
-    <link
-        rel="stylesheet"
-        href="/static/styles.css"
-    >
+body {
+    background: var(--obsidian);
+    color: var(--bone);
+}
 
-    <style>
+/* Remove the old top eyebrow above Overview. */
+.topbar > div:first-child .eyebrow {
+    display: none;
+}
 
-        /* =====================================================
-           AEGIS AUTONOMOUS ENGINE TELEMETRY
-        ====================================================== */
+/* Properly padded Aegis Online status. */
+.topbar .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-width: 138px;
+    height: 40px;
+    padding: 0 18px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
 
-        .agent-panel {
-            margin-bottom: 24px;
-        }
+.topbar .status-pill > span:first-child {
+    width: 7px;
+    height: 7px;
+    min-width: 7px;
+    border-radius: 50%;
+    background: #3FB56B;
+}
 
-        .agent-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
+.topbar .status-label {
+    display: inline-block;
+    white-space: nowrap;
+}
 
-        .agent-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 12px;
-            border: 1px solid #293241;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: .08em;
-        }
+/* App shell / mockup-style dashboard frame. */
+.app-shell {
+    min-height: 100vh;
+}
 
-        .agent-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #8d98a8;
-        }
+.app-browser {
+    min-height: 100vh;
+    background: var(--obsidian);
+    border: 1px solid #17191C;
+    box-shadow: 0 30px 80px rgba(0,0,0,.45);
+}
 
-        .agent-dot.online {
-            background: #37c98b;
-            box-shadow:
-                0 0 10px
-                rgba(55, 201, 139, .65);
-        }
+/* Main RedTeam Desk navigation. */
+.desk-nav {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 0 34px;
+    border-bottom: 1px solid #25292E;
+    background: #0C0D0F;
+}
 
-        .agent-dot.offline {
-            background: #ef6b73;
-        }
+.brand-lockup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 210px;
+}
 
-        .agent-state {
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: .08em;
-        }
+.brand-lockup img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
 
-        .agent-flow {
-            display: grid;
-            grid-template-columns:
-                repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-bottom: 18px;
-        }
+.brand-lockup strong {
+    display: block;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 18px;
+    letter-spacing: 1.2px;
+    color: var(--bone);
+}
 
-        .agent-flow-step {
-            padding: 14px;
-            border: 1px solid #252d38;
-            border-radius: 10px;
-            background: rgba(255,255,255,.015);
-        }
+.brand-lockup span {
+    display: block;
+    margin-top: 2px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--signal);
+}
 
-        .agent-flow-step span {
-            display: block;
-            font-size: 11px;
-            opacity: .65;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-        }
+.navlinks {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex: 1;
+}
 
-        .agent-flow-step strong {
-            font-size: 14px;
-        }
+.navlinks .nav-item {
+    border: 0;
+    background: transparent;
+    color: var(--steel);
+    padding: 8px 0;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+}
 
-        .agent-stats {
-            display: grid;
-            grid-template-columns:
-                repeat(7, minmax(0, 1fr));
-            gap: 10px;
-        }
+.navlinks .nav-item:hover,
+.navlinks .nav-item.active {
+    color: var(--bone);
+}
 
-        .agent-stat {
-            padding: 14px;
-            border: 1px solid #252d38;
-            border-radius: 10px;
-        }
+.navlinks .nav-item.active {
+    border-bottom: 1px solid var(--signal);
+}
 
-        .agent-stat span {
-            display: block;
-            font-size: 11px;
-            opacity: .65;
-            margin-bottom: 6px;
-        }
+/* Keep app.js-compatible hidden sidebar controls available. */
+.sidebar {
+    display: none !important;
+}
 
-        .agent-stat strong {
-            font-size: 20px;
-        }
+.sidebar-bottom,
+.user-mini {
+    display: none !important;
+}
 
-        .agent-last-event {
-            margin-top: 16px;
-            padding: 14px 16px;
-            border: 1px solid #252d38;
-            border-radius: 10px;
-        }
+.logout-btn {
+    border: 1px solid #2D3136;
+    background: transparent;
+    color: var(--steel);
+    padding: 7px 12px;
+}
 
-        .agent-last-event-label {
-            font-size: 11px;
-            opacity: .65;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-            margin-bottom: 7px;
-        }
+/* Hidden compatibility nodes required by existing app.js. */
+#aegisCompatUser {
+    display: none !important;
+}
 
-        .agent-last-event-title {
-            font-size: 14px;
-            line-height: 1.45;
-        }
+/* Hero / pipeline. */
+.hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+    gap: 70px;
+    padding: 72px 72px 62px;
+    border-bottom: 1px solid #1D2024;
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.012) 1px,
+            transparent 1px
+        );
+    background-size: 80px 80px;
+}
 
-        .agent-last-event-time {
-            margin-top: 6px;
-            font-size: 11px;
-            opacity: .55;
-        }
+.hero h1 {
+    margin: 0;
+    max-width: 650px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: clamp(38px, 5vw, 68px);
+    line-height: .98;
+    letter-spacing: -2px;
+    font-weight: 600;
+    color: var(--bone);
+}
 
-        .agent-error {
-            margin-top: 10px;
-            font-size: 11px;
-            opacity: .75;
-        }
+.hero h1 em {
+    color: var(--signal);
+    font-style: normal;
+}
 
-        .status-pill.agent-offline {
-            opacity: .65;
-        }
+.hero-copy {
+    margin-top: 24px;
+    max-width: 640px;
+    color: var(--steel);
+    font-size: 15px;
+    line-height: 1.75;
+}
 
-                /* =====================================================
-        TOP AEGIS STATUS
-        ====================================================== */
+.pipeline {
+    display: flex;
+    width: max-content;
+    max-width: 100%;
+    margin-top: 32px;
+    border: 1px solid #2A2E33;
+}
 
-        .topbar .status-pill {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            width: max-content;
-            min-width: 118px;
-            height: 36px;
-            padding: 0 12px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
+.pipeline span {
+    padding: 10px 16px;
+    color: var(--steel);
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    border-right: 1px solid #2A2E33;
+}
 
-        .topbar .status-pill > span:first-child {
-            width: 7px;
-            height: 7px;
-            min-width: 7px;
-            border-radius: 50%;
-        }
+.pipeline span:last-child {
+    border-right: 0;
+}
 
-        .topbar .status-label {
-            white-space: nowrap;
-            display: inline-block;
-        }
+.pipeline .gate {
+    color: var(--signal);
+}
 
-        @media (max-width: 1000px) {
+.risk-card {
+    align-self: center;
+    border: 1px solid #2A2E33;
+    background: #17191C;
+    padding: 24px;
+}
 
-            .agent-stats {
-                grid-template-columns:
-                    repeat(4, minmax(0, 1fr));
-            }
+.risk-card .panel-kicker {
+    color: var(--signal);
+    font-family: "Space Grotesk", sans-serif;
+    letter-spacing: 2px;
+    font-size: 10px;
+}
 
-        }
+.risk-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 15px 0;
+    border-bottom: 1px solid #2A2E33;
+    color: var(--steel);
+    font-size: 13px;
+}
 
-        @media (max-width: 700px) {
+.risk-row:last-child {
+    border-bottom: 0;
+}
 
-            .agent-flow {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-            }
+.risk-row .authorized {
+    color: #3FB56B;
+}
 
-            .agent-stats {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-            }
+.risk-row .rejected {
+    color: var(--signal);
+}
 
-            .agent-header {
-                align-items: flex-start;
-                flex-direction: column;
-            }
+/* Live operational area. */
+.live-desk {
+    padding: 42px 72px 72px;
+}
 
-        }
+.live-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 22px;
+}
 
-    </style>
+.live-top h2 {
+    margin: 4px 0 0;
+    font-family: "Space Grotesk", sans-serif;
+    color: var(--bone);
+}
 
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.panel,
+.metric-card,
+.agent-panel {
+    border: 1px solid #2A2E33;
+    border-radius: 0;
+    background: #15171A;
+    box-shadow: none;
+}
+
+.panel {
+    padding: 22px;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.metric-card {
+    padding: 18px;
+}
+
+.metric-label,
+.panel-kicker,
+.section-intro .panel-kicker {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--steel);
+}
+
+.metric-value {
+    margin-top: 10px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 24px;
+    color: var(--bone);
+}
+
+.metric-change {
+    margin-top: 5px;
+    color: var(--steel);
+}
+
+.agent-panel {
+    padding: 22px;
+    margin-bottom: 16px;
+}
+
+.agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.agent-header h3,
+.panel h3 {
+    margin: 5px 0 0;
+    color: var(--bone);
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.agent-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.agent-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #3FB56B;
+}
+
+.agent-state {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+}
+
+.agent-flow {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid #2A2E33;
+}
+
+.agent-flow-step {
+    padding: 15px;
+    border-right: 1px solid #2A2E33;
+}
+
+.agent-flow-step:last-child {
+    border-right: 0;
+}
+
+.agent-flow-step span,
+.agent-stat span,
+.agent-last-event-label {
+    display: block;
+    color: var(--steel);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+.agent-flow-step strong {
+    display: block;
+    margin-top: 7px;
+    color: var(--bone);
+}
+
+.agent-stats {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.agent-stat {
+    padding: 13px;
+    border: 1px solid #2A2E33;
+}
+
+.agent-stat strong {
+    display: block;
+    margin-top: 6px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 19px;
+    color: var(--bone);
+}
+
+.agent-last-event {
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px solid #2A2E33;
+}
+
+.agent-last-event-title {
+    margin-top: 7px;
+    color: var(--bone);
+    font-size: 13px;
+}
+
+.agent-last-event-time {
+    margin-top: 5px;
+    color: var(--steel-dim);
+    font-size: 10px;
+}
+
+.agent-error {
+    margin-top: 9px;
+    color: var(--steel);
+    font-size: 10px;
+}
+
+.section-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 18px;
+}
+
+.section-intro h3 {
+    margin: 5px 0 0;
+}
+
+.ghost-btn {
+    border: 1px solid #2D3136;
+    border-radius: 0;
+    background: transparent;
+    color: var(--steel);
+    padding: 9px 14px;
+}
+
+.ghost-btn:hover {
+    color: var(--bone);
+    border-color: var(--steel-dim);
+}
+
+.portfolio-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    margin-top: 20px;
+    border: 1px solid #2A2E33;
+}
+
+.portfolio-summary > div {
+    padding: 16px;
+    background: #111315;
+}
+
+.portfolio-summary span {
+    display: block;
+    color: var(--steel);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+.portfolio-summary strong {
+    display: block;
+    margin-top: 7px;
+    color: var(--bone);
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-wrap th {
+    color: var(--steel);
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 10px 9px;
+    border-bottom: 1px solid #2A2E33;
+}
+
+.table-wrap td {
+    padding: 11px 9px;
+    border-bottom: 1px solid #25292E;
+    color: var(--bone);
+    font-size: 12px;
+}
+
+.event-list {
+    display: grid;
+    gap: 8px;
+}
+
+.event-list .event-card {
+    background: #17191C;
+    border: 1px solid #2A2E33;
+    padding: 14px;
+}
+
+.event-list.large {
+    grid-template-columns: 1fr 1fr;
+}
+
+.chart-panel {
+    min-height: 430px;
+}
+
+.chart-meta {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 20px;
+}
+
+.chart-meta span {
+    display: block;
+    color: var(--steel);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+.chart-meta strong {
+    display: block;
+    margin-top: 6px;
+    color: var(--bone);
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.chart-container {
+    position: relative;
+    height: 330px;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.empty-state {
+    color: var(--steel-dim);
+    font-size: 12px;
+    text-align: center;
+    padding-top: 100px;
+}
+
+.section.hidden {
+    display: none !important;
+}
+
+.positive {
+    color: #3FB56B !important;
+}
+
+.negative {
+    color: var(--signal) !important;
+}
+
+@media (max-width: 1100px) {
+    .hero,
+    .live-desk {
+        padding-left: 34px;
+        padding-right: 34px;
+    }
+
+    .metric-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .agent-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 850px) {
+    .desk-nav {
+        padding: 16px 20px;
+        flex-wrap: wrap;
+    }
+
+    .navlinks {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        gap: 20px;
+    }
+
+    .hero,
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        gap: 35px;
+    }
+
+    .event-list.large {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .hero,
+    .live-desk {
+        padding: 30px 18px;
+    }
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+    .pipeline {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .pipeline span {
+        border-right: 1px solid #2A2E33;
+    }
+
+    .metric-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .agent-flow {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .agent-flow-step:nth-child(2) {
+        border-right: 0;
+    }
+
+    .agent-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .portfolio-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .section-intro {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+</style>
 </head>
-
 
 <body>
 
+<!-- ============================================================
+     LOGIN
+     ============================================================ -->
 
-    <!-- =====================================================
-         LOGIN
-    ====================================================== -->
+<div id="loginView" class="auth-shell">
 
-    <div
-        id="loginView"
-        class="auth-shell"
-    >
+    <div class="auth-card">
 
-        <div class="auth-card">
+        <div class="brand-mark">A</div>
 
-            <div class="brand-mark">
-                A
-            </div>
+        <div class="eyebrow">
+            AUTONOMOUS EVENT-DRIVEN TRADING
+        </div>
 
-            <div class="eyebrow">
-                AUTONOMOUS EVENT-DRIVEN TRADING
-            </div>
+        <h1>AEGIS</h1>
 
-            <h1>Aegis</h1>
+        <p class="auth-subtitle">
+            Qwen proposes. The gate authorizes. Aegis executes.
+        </p>
 
-            <p class="auth-subtitle">
-                AI-powered paper trading with event
-                intelligence, risk control, and
-                transparent execution.
-            </p>
+        <form id="loginForm">
 
-            <form id="loginForm">
+            <label for="email">Email</label>
 
-                <label for="email">
-                    Email
-                </label>
-
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="kenneth@example.com"
-                    required
-                >
-
-                <label for="password">
-                    Password
-                </label>
-
-                <input
-                    id="password"
-                    type="password"
-                    placeholder="Your password"
-                    required
-                >
-
-                <button
-                    type="submit"
-                    class="primary-btn"
-                >
-                    Sign in
-                </button>
-
-                <div
-                    id="loginError"
-                    class="form-error"
-                ></div>
-
-                <button
-                    type="button"
-                    id="showRegisterBtn"
-                    class="auth-switch-btn"
-                >
-                    Create a new account
-                </button>
-
-            </form>
-
-            <form
-                id="registerForm"
-                class="hidden"
+            <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                required
             >
 
-                <label for="registerUsername">
-                    Username
-                </label>
+            <label for="password">Password</label>
 
-                <input
-                    id="registerUsername"
-                    type="text"
-                    placeholder="Your username"
-                    minlength="2"
-                    required
-                >
+            <input
+                id="password"
+                type="password"
+                placeholder="Your password"
+                required
+            >
 
-                <label for="registerEmail">
-                    Email
-                </label>
+            <button
+                type="submit"
+                class="primary-btn"
+            >
+                Sign in
+            </button>
 
-                <input
-                    id="registerEmail"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                >
+            <div
+                id="loginError"
+                class="form-error"
+            ></div>
 
-                <label for="registerPassword">
-                    Password
-                </label>
+        </form>
 
-                <input
-                    id="registerPassword"
-                    type="password"
-                    placeholder="Create a password"
-                    minlength="6"
-                    required
-                >
+        <form
+            id="registerForm"
+            class="hidden"
+        >
 
-                <label for="registerConfirmPassword">
-                    Confirm password
-                </label>
+            <label for="registerUsername">
+                Username
+            </label>
 
-                <input
-                    id="registerConfirmPassword"
-                    type="password"
-                    placeholder="Repeat your password"
-                    minlength="6"
-                    required
-                >
+            <input
+                id="registerUsername"
+                type="text"
+                placeholder="Your username"
+                minlength="2"
+                required
+            >
 
-                <button
-                    type="submit"
-                    class="primary-btn"
-                >
-                    Create account
-                </button>
+            <label for="registerEmail">
+                Email
+            </label>
 
-                <div
-                    id="registerError"
-                    class="form-error"
-                ></div>
+            <input
+                id="registerEmail"
+                type="email"
+                placeholder="you@example.com"
+                required
+            >
 
-                <button
-                    type="button"
-                    id="showLoginBtn"
-                    class="auth-switch-btn"
-                >
-                    Back to sign in
-                </button>
+            <label for="registerPassword">
+                Password
+            </label>
 
-            </form>
+            <input
+                id="registerPassword"
+                type="password"
+                placeholder="Create a password"
+                minlength="6"
+                required
+            >
+
+            <label for="registerConfirmPassword">
+                Confirm password
+            </label>
+
+            <input
+                id="registerConfirmPassword"
+                type="password"
+                placeholder="Repeat your password"
+                minlength="6"
+                required
+            >
+
+            <button
+                type="submit"
+                class="primary-btn"
+            >
+                Create account
+            </button>
+
+            <div
+                id="registerError"
+                class="form-error"
+            ></div>
+
+        </form>
+
+        <div class="auth-switch">
+
+            <span>Need an account?</span>
+
+            <button
+                id="showRegisterBtn"
+                type="button"
+            >
+                Create one
+            </button>
+
+            <span> · </span>
+
+            <button
+                id="showLoginBtn"
+                type="button"
+            >
+                Back to sign in
+            </button>
 
         </div>
 
     </div>
 
-
-    <!-- =====================================================
-         DASHBOARD
-    ====================================================== -->
-
-    <div
-        id="dashboardView"
-        class="app-shell hidden"
-    >
+</div>
 
 
-        <!-- SIDEBAR -->
+<!-- ============================================================
+     DASHBOARD
+     ============================================================ -->
 
-        <aside class="sidebar">
+<div
+    id="dashboardView"
+    class="app-shell hidden"
+>
 
-            <div class="brand">
+    <div class="app-browser">
 
-                <div class="brand-mark small">
-                    A
-                </div>
+        <!-- =====================================================
+             TOP NAVIGATION
+             ===================================================== -->
+
+        <header class="desk-nav">
+
+            <div class="brand-lockup">
+
+                <img
+                    src="/static/brand/logo-icon.svg"
+                    alt="Aegis"
+                >
 
                 <div>
-
-                    <strong>
-                        Aegis
-                    </strong>
-
-                    <span>
-                        Trading Intelligence
-                    </span>
-
+                    <strong>AEGIS</strong>
+                    <span>REDTEAM DESK</span>
                 </div>
 
             </div>
 
-
-            <nav>
+            <nav class="navlinks">
 
                 <button
                     class="nav-item active"
@@ -450,96 +909,118 @@
 
             </nav>
 
+            <div class="status-pill">
 
-            <div class="sidebar-bottom">
+                <span></span>
 
-                <div class="user-mini">
-
-                    <div
-                        class="avatar"
-                        id="userAvatar"
-                    >
-                        K
-                    </div>
-
-                    <div>
-
-                        <strong
-                            id="usernameLabel"
-                        >
-                            User
-                        </strong>
-
-                        <span
-                            id="emailLabel"
-                        >
-                            user@email.com
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    id="logoutBtn"
-                    class="logout-btn"
-                >
-                    Sign out
-                </button>
+                <span class="status-label">
+                    Aegis Online
+                </span>
 
             </div>
 
-        </aside>
+        </header>
 
 
-        <!-- MAIN -->
+        <!-- =====================================================
+             HERO
+             ===================================================== -->
 
-        <main class="main">
+        <section class="hero">
+
+            <div>
+
+                <div class="panel-kicker">
+                    AEGIS — REDTEAM DESK
+                </div>
+
+                <h1>
+                    Qwen proposes.<br>
+                    The gate <em>authorizes.</em><br>
+                    Aegis executes.
+                </h1>
+
+                <p class="hero-copy">
+                    Every event-driven decision passes through an
+                    independent risk desk before a single paper dollar
+                    moves — confidence, exposure, stop distance,
+                    and risk/reward checked in sequence.
+                </p>
+
+                <div class="pipeline">
+
+                    <span>EVENT</span>
+                    <span>QWEN</span>
+                    <span class="gate">GATE</span>
+                    <span>TRADER</span>
+                    <span>PORTFOLIO</span>
+
+                </div>
+
+            </div>
+
+            <div class="risk-card">
+
+                <div class="panel-kicker">
+                    LATEST RISK DECISIONS
+                </div>
+
+                <div class="risk-row">
+                    <span>NVDA · BUY 0.4x</span>
+                    <strong class="authorized">AUTHORIZED</strong>
+                </div>
+
+                <div class="risk-row">
+                    <span>TSLA · SELL 0.6x</span>
+                    <strong class="rejected">REJECTED — R:R</strong>
+                </div>
+
+                <div class="risk-row">
+                    <span>AMD · HOLD</span>
+                    <strong class="authorized">AUTHORIZED</strong>
+                </div>
+
+                <div class="risk-row">
+                    <span>META · BUY 0.3x</span>
+                    <strong class="rejected">REJECTED — CONFIDENCE</strong>
+                </div>
+
+            </div>
+
+        </section>
 
 
-            <!-- TOP BAR -->
+        <!-- =====================================================
+             LIVE DESK
+             ===================================================== -->
 
-            <header class="topbar">
+        <main class="live-desk">
+
+            <div class="live-top">
 
                 <div>
-
-                    <div class="eyebrow">
-                        AI TRADING CONTROL CENTER
+                    <div class="panel-kicker">
+                        LIVE OPERATIONS
                     </div>
 
                     <h2 id="pageTitle">
                         Overview
                     </h2>
-
                 </div>
 
-
-                <div class="status-pill">
-
-                    <span></span>
-
-                    <span class="status-label">
-                    </span>
-
-                </div>
-
-            </header>
+            </div>
 
 
             <!-- =================================================
-                 OVERVIEW
-            ================================================== -->
+                 AUTONOMOUS ENGINE
+                 ================================================= -->
 
             <section
                 id="overviewSection"
                 class="section"
             >
 
-
-                <!-- AUTONOMOUS ENGINE -->
-
-                <div class="panel agent-panel">
+                <div class="agent-panel">
 
                     <div class="agent-header">
 
@@ -555,12 +1036,11 @@
 
                         </div>
 
-
                         <div class="agent-status">
 
                             <span
                                 id="agentEngineDot"
-                                class="agent-dot online"
+                                class="agent-dot"
                             ></span>
 
                             <span
@@ -574,163 +1054,72 @@
 
                     </div>
 
-
                     <div class="agent-flow">
 
                         <div class="agent-flow-step">
-
-                            <span>
-                                Mode
-                            </span>
-
-                            <strong id="agentMode">
-                                AUTONOMOUS
-                            </strong>
-
+                            <span>Mode</span>
+                            <strong id="agentMode">AUTONOMOUS</strong>
                         </div>
 
-
                         <div class="agent-flow-step">
-
-                            <span>
-                                Cycle Interval
-                            </span>
-
-                            <strong id="agentInterval">
-                                60s
-                            </strong>
-
+                            <span>Cycle Interval</span>
+                            <strong id="agentInterval">60s</strong>
                         </div>
 
-
                         <div class="agent-flow-step">
-
-                            <span>
-                                Last Cycle
-                            </span>
-
-                            <strong id="agentLastCycle">
-                                —
-                            </strong>
-
+                            <span>Last Cycle</span>
+                            <strong id="agentLastCycle">—</strong>
                         </div>
 
-
                         <div class="agent-flow-step">
-
-                            <span>
-                                Next Cycle
-                            </span>
-
-                            <strong id="agentNextCycle">
-                                —
-                            </strong>
-
+                            <span>Next Cycle</span>
+                            <strong id="agentNextCycle">—</strong>
                         </div>
 
                     </div>
-
 
                     <div class="agent-stats">
 
                         <div class="agent-stat">
-
-                            <span>
-                                Cycles
-                            </span>
-
-                            <strong id="agentCycles">
-                                0
-                            </strong>
-
+                            <span>Cycles</span>
+                            <strong id="agentCycles">0</strong>
                         </div>
 
-
                         <div class="agent-stat">
-
-                            <span>
-                                Articles
-                            </span>
-
-                            <strong id="agentArticles">
-                                0
-                            </strong>
-
+                            <span>Articles</span>
+                            <strong id="agentArticles">0</strong>
                         </div>
 
-
                         <div class="agent-stat">
-
-                            <span>
-                                New Events
-                            </span>
-
-                            <strong id="agentNewEvents">
-                                0
-                            </strong>
-
+                            <span>New Events</span>
+                            <strong id="agentNewEvents">0</strong>
                         </div>
 
-
                         <div class="agent-stat">
-
-                            <span>
-                                Rejected
-                            </span>
-
-                            <strong id="agentRejected">
-                                0
-                            </strong>
-
+                            <span>Rejected</span>
+                            <strong id="agentRejected">0</strong>
                         </div>
 
-
                         <div class="agent-stat">
-
-                            <span>
-                                AI Decisions
-                            </span>
-
-                            <strong id="agentDecisions">
-                                0
-                            </strong>
-
+                            <span>AI Decisions</span>
+                            <strong id="agentDecisions">0</strong>
                         </div>
 
-
                         <div class="agent-stat">
-
-                            <span>
-                                Trades
-                            </span>
-
-                            <strong id="agentTrades">
-                                0
-                            </strong>
-
+                            <span>Trades</span>
+                            <strong id="agentTrades">0</strong>
                         </div>
 
-
                         <div class="agent-stat">
-
-                            <span>
-                                Auto Exits
-                            </span>
-
-                            <strong id="agentExits">
-                                0
-                            </strong>
-
+                            <span>Auto Exits</span>
+                            <strong id="agentExits">0</strong>
                         </div>
 
                     </div>
 
-
                     <div class="agent-last-event">
 
-                        <div
-                            class="agent-last-event-label"
-                        >
+                        <div class="agent-last-event-label">
                             Last Event Detected
                         </div>
 
@@ -750,7 +1139,6 @@
 
                     </div>
 
-
                     <div
                         id="agentError"
                         class="agent-error"
@@ -761,112 +1149,82 @@
                 </div>
 
 
-                <!-- METRICS -->
+                <!-- =================================================
+                     METRICS
+                     ================================================= -->
 
                 <div class="metric-grid">
 
-                    <div
-                        class="metric-card primary-metric"
-                    >
-
-                        <div class="metric-label">
-                            Total Equity
-                        </div>
-
+                    <div class="metric-card">
+                        <div class="metric-label">Total Equity</div>
                         <div
                             class="metric-value"
                             id="totalEquity"
                         >
                             $0.00
                         </div>
-
                         <div
                             class="metric-change"
                             id="portfolioReturn"
                         >
                             0.00%
                         </div>
-
                     </div>
 
-
                     <div class="metric-card">
-
-                        <div class="metric-label">
-                            Cash Balance
-                        </div>
-
+                        <div class="metric-label">Cash Balance</div>
                         <div
                             class="metric-value"
                             id="cashBalance"
                         >
                             $0.00
                         </div>
-
                     </div>
 
-
                     <div class="metric-card">
-
-                        <div class="metric-label">
-                            Realized P&L
-                        </div>
-
+                        <div class="metric-label">Realized P&L</div>
                         <div
                             class="metric-value"
                             id="realizedPnl"
                         >
                             $0.00
                         </div>
-
                     </div>
 
-
                     <div class="metric-card">
-
-                        <div class="metric-label">
-                            Unrealized P&L
-                        </div>
-
+                        <div class="metric-label">Unrealized P&L</div>
                         <div
                             class="metric-value"
                             id="unrealizedPnl"
                         >
                             $0.00
                         </div>
-
                     </div>
 
-
                     <div class="metric-card">
-
-                        <div class="metric-label">
-                            Initial Capital
-                        </div>
-
+                        <div class="metric-label">Initial Capital</div>
                         <div
                             class="metric-value"
                             id="initialBalance"
                         >
                             $0.00
                         </div>
-
                     </div>
 
                 </div>
 
 
-                <!-- ACCOUNT + POSITIONS -->
+                <!-- =================================================
+                     ACCOUNT + POSITIONS
+                     ================================================= -->
 
                 <div class="content-grid">
-
 
                     <div class="panel">
 
                         <div class="panel-header">
 
                             <div>
-
                                 <div class="panel-kicker">
                                     PORTFOLIO
                                 </div>
@@ -874,7 +1232,6 @@
                                 <h3>
                                     Account Overview
                                 </h3>
-
                             </div>
 
                             <button
@@ -886,64 +1243,32 @@
 
                         </div>
 
-
                         <div class="portfolio-summary">
 
                             <div>
-
-                                <span>
-                                    Account Return
-                                </span>
-
-                                <strong
-                                    id="summaryReturn"
-                                >
-                                    0.00%
-                                </strong>
-
+                                <span>Account Return</span>
+                                <strong id="summaryReturn">0.00%</strong>
                             </div>
 
-
                             <div>
-
-                                <span>
-                                    Open Positions
-                                </span>
-
-                                <strong
-                                    id="positionCount"
-                                >
-                                    0
-                                </strong>
-
+                                <span>Open Positions</span>
+                                <strong id="positionCount">0</strong>
                             </div>
 
-
                             <div>
-
-                                <span>
-                                    Total Trades
-                                </span>
-
-                                <strong
-                                    id="tradeCount"
-                                >
-                                    0
-                                </strong>
-
+                                <span>Total Trades</span>
+                                <strong id="tradeCount">0</strong>
                             </div>
 
                         </div>
 
                     </div>
 
-
                     <div class="panel">
 
                         <div class="panel-header">
 
                             <div>
-
                                 <div class="panel-kicker">
                                     POSITIONS
                                 </div>
@@ -951,11 +1276,9 @@
                                 <h3>
                                     Open Positions
                                 </h3>
-
                             </div>
 
                         </div>
-
 
                         <div
                             id="overviewPositions"
@@ -967,14 +1290,15 @@
                 </div>
 
 
-                <!-- LATEST EVENTS -->
+                <!-- =================================================
+                     LATEST EVENTS
+                     ================================================= -->
 
                 <div class="panel">
 
                     <div class="panel-header">
 
                         <div>
-
                             <div class="panel-kicker">
                                 EVENT INTELLIGENCE
                             </div>
@@ -982,9 +1306,7 @@
                             <h3>
                                 Latest Events
                             </h3>
-
                         </div>
-
 
                         <button
                             class="ghost-btn"
@@ -994,7 +1316,6 @@
                         </button>
 
                     </div>
-
 
                     <div
                         id="overviewEvents"
@@ -1007,8 +1328,8 @@
 
 
             <!-- =================================================
-                 EVENT INTELLIGENCE
-            ================================================== -->
+                 EVENTS
+                 ================================================= -->
 
             <section
                 id="eventsSection"
@@ -1018,7 +1339,6 @@
                 <div class="section-intro">
 
                     <div>
-
                         <div class="panel-kicker">
                             EVENT INTELLIGENCE
                         </div>
@@ -1026,9 +1346,7 @@
                         <h3>
                             What Aegis is seeing and deciding
                         </h3>
-
                     </div>
-
 
                     <button
                         class="ghost-btn"
@@ -1038,7 +1356,6 @@
                     </button>
 
                 </div>
-
 
                 <div
                     id="eventsList"
@@ -1050,7 +1367,7 @@
 
             <!-- =================================================
                  TRADES
-            ================================================== -->
+                 ================================================= -->
 
             <section
                 id="tradesSection"
@@ -1060,7 +1377,6 @@
                 <div class="section-intro">
 
                     <div>
-
                         <div class="panel-kicker">
                             EXECUTION HISTORY
                         </div>
@@ -1068,9 +1384,7 @@
                         <h3>
                             Trade History
                         </h3>
-
                     </div>
-
 
                     <button
                         class="ghost-btn"
@@ -1080,7 +1394,6 @@
                     </button>
 
                 </div>
-
 
                 <div class="panel">
 
@@ -1096,7 +1409,7 @@
 
             <!-- =================================================
                  POSITIONS
-            ================================================== -->
+                 ================================================= -->
 
             <section
                 id="positionsSection"
@@ -1106,7 +1419,6 @@
                 <div class="section-intro">
 
                     <div>
-
                         <div class="panel-kicker">
                             PORTFOLIO
                         </div>
@@ -1114,9 +1426,7 @@
                         <h3>
                             Open Positions
                         </h3>
-
                     </div>
-
 
                     <button
                         class="ghost-btn"
@@ -1126,7 +1436,6 @@
                     </button>
 
                 </div>
-
 
                 <div class="panel">
 
@@ -1142,7 +1451,7 @@
 
             <!-- =================================================
                  PERFORMANCE
-            ================================================== -->
+                 ================================================= -->
 
             <section
                 id="performanceSection"
@@ -1152,7 +1461,6 @@
                 <div class="section-intro">
 
                     <div>
-
                         <div class="panel-kicker">
                             PERFORMANCE
                         </div>
@@ -1160,9 +1468,7 @@
                         <h3>
                             Equity History
                         </h3>
-
                     </div>
-
 
                     <button
                         class="ghost-btn"
@@ -1173,48 +1479,29 @@
 
                 </div>
 
-
                 <div class="panel chart-panel">
 
                     <div class="chart-meta">
 
                         <div>
-
-                            <span>
-                                Current Equity
-                            </span>
-
-                            <strong
-                                id="chartCurrentEquity"
-                            >
+                            <span>Current Equity</span>
+                            <strong id="chartCurrentEquity">
                                 $0.00
                             </strong>
-
                         </div>
 
-
                         <div>
-
-                            <span>
-                                Return
-                            </span>
-
-                            <strong
-                                id="chartReturn"
-                            >
+                            <span>Return</span>
+                            <strong id="chartReturn">
                                 0.00%
                             </strong>
-
                         </div>
 
                     </div>
 
-
                     <div class="chart-container">
 
-                        <canvas
-                            id="equityChart"
-                        ></canvas>
+                        <canvas id="equityChart"></canvas>
 
                         <div
                             id="chartEmpty"
@@ -1231,17 +1518,41 @@
 
         </main>
 
+
+        <!-- =====================================================
+             EXISTING APP.JS COMPATIBILITY
+             These are intentionally hidden. app.js expects them.
+             ===================================================== -->
+
+        <div id="aegisCompatUser">
+
+            <div
+                id="userAvatar"
+                class="avatar"
+            >
+                A
+            </div>
+
+            <span id="usernameLabel">User</span>
+
+            <span id="emailLabel">user@email.com</span>
+
+            <button
+                id="logoutBtn"
+                type="button"
+            >
+                Sign out
+            </button>
+
+        </div>
+
     </div>
 
+</div>
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/chart.js"
-    ></script>
 
-    <script
-        src="/static/app.js"
-    ></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/app.js"></script>
 
 </body>
-
 </html>

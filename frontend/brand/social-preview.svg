@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <defs>
+    <clipPath id="sc"><path d="M180,232 L268,232 L268,300 L226,404 L180,300 Z"/></clipPath>
+  </defs>
+  <rect width="1280" height="640" fill="#0A0B0D"/>
+  <line x1="0" y1="600" x2="1280" y2="600" stroke="#1B1E23" stroke-width="1"/>
+  <line x1="180" y1="470" x2="180" y2="540" stroke="#1B1E23" stroke-width="1"/>
+
+  <!-- mark -->
+  <path d="M180,232 L268,232 L268,300 L226,404 L180,300 Z" fill="#0A0B0D" stroke="#9BA3AE" stroke-width="1.6"/>
+  <g clip-path="url(#sc)">
+    <path d="M158,362 L202,252 L222,252 L178,362 Z" fill="#C81E3A"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="300" y="298" font-family="Space Grotesk, Avenir Next, Futura, sans-serif" font-weight="600" font-size="80" letter-spacing="2" fill="#F4EFE6">AEGIS</text>
+  <line x1="302" y1="326" x2="700" y2="326" stroke="#1B1E23" stroke-width="1"/>
+  <text x="302" y="358" font-family="Space Grotesk, Avenir Next, Futura, sans-serif" font-weight="500" font-size="22" letter-spacing="7" fill="#C81E3A">REDTEAM DESK</text>
+
+  <text x="200" y="486" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-weight="400" font-size="19" letter-spacing="0.3" fill="#9BA3AE">Qwen proposes. The gate authorizes. Aegis executes.</text>
+  <text x="200" y="524" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-weight="400" font-size="14" letter-spacing="2" fill="#5B6269">BITGET AI BASE CAMP HACKATHON S2  ·  AGENTIC TRADING TRACK</text>
+</svg>
